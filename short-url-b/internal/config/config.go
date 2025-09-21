@@ -24,7 +24,7 @@ type HTTPServer struct {
 }
 
 func MustLoad() *Config {
-	defaultConfigPath := "C:/Users/samat/GolandProjects/url-shortener/config/local.yaml"
+	defaultConfigPath := "C:/Users/samat/GolandProjects/url-shortener/short-url-b/config/local.yaml"
 	if err := os.Setenv("CONFIG_PATH", defaultConfigPath); err != nil {
 		log.Fatal(err)
 		return nil

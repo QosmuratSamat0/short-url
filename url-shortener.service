@@ -1,0 +1,15 @@
+[Unit]
+Description=URL Shortener Backend
+After=network.target
+
+[Service]
+Type=simple
+User=www-data
+WorkingDirectory=/path/to/your/backend
+ExecStart=/path/to/your/backend/url-shortener
+Restart=always
+RestartSec=5
+Environment=ENV=prod
+
+[Install]
+WantedBy=multi-user.target
