@@ -30,7 +30,7 @@ type URLSaver interface {
 
 func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 	return func(w http.ResponseWriter, r *http.Request) {
-		const op = "handlers.url.save.New()"
+		const op = "handlers.url.save.New"
 
 		log = log.With(
 			slog.String("op", op),
@@ -73,6 +73,8 @@ func New(log *slog.Logger, urlSaver URLSaver) http.HandlerFunc {
 			log.Error("failed to save url", sl.Err(err))
 
 			render.JSON(w, r, resp.Error("failed to save url"))
+
+			return
 		}
 
 		log.Info("url saved", slog.Int64("id", id))

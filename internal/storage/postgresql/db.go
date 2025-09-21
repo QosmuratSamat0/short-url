@@ -32,7 +32,10 @@ func New(dsn string) (*Storage, error) {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
 
-	_, err = db.Exec(context.Background(), `CREATE INDEX IF NOT EXISTS url_alias ON url(alias);`)
+	_, err = db.Exec(context.Background(),
+		`
+			CREATE INDEX IF NOT EXISTS url_alias ON url(alias);
+			`)
 	if err != nil {
 		return nil, fmt.Errorf("%s: %w", op, err)
 	}
@@ -68,10 +71,7 @@ func (s *Storage) GetURL(alias string) (string, error) {
 	if errors.Is(err, pgx.ErrNoRows) {
 		return "", storage.ErrUrlNotFound
 	}
-	if err != nil {
-		return "", fmt.Errorf("%s: %w", op, err)
-	}
-
+	
 	return resURL, nil
 }
 

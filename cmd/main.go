@@ -8,11 +8,12 @@ import (
 	"samat/internal/http-server/handlers/delete_url"
 	"samat/internal/http-server/handlers/redirect"
 	"samat/internal/http-server/handlers/url/save"
+	corsMw "samat/internal/http-server/middleware/cors"
 	mw "samat/internal/http-server/middleware/logger"
 	"samat/internal/lib/logger/handlers/slogpretty"
 	"samat/internal/lib/logger/sl"
-	"samat/internal/storage/postgresql"
-	_ "samat/internal/storage/sqlite"
+	"samat/internal/storage/sqlite"
+	_ "samat/internal/storage/postgresql"
 
 	"log/slog"
 	"samat/internal/config"
@@ -31,20 +32,21 @@ func main() {
 	log.Info("info level starting up", slog.String("env", cfg.Env))
 	log.Debug("debug level starting up")
 
-	storage, err := postgresql.New(cfg.DatabaseURL)
+	storage, err := sqlite.New(cfg.StoragePath)
 	if err != nil {
 		log.Error("failed to init storage", sl.Err(err))
+		os.Exit(1)
 	}
 
-	//storage, err := sqlite.New(cfg.StoragePath)
+	//storage, err := postgresql.New(cfg.DatabaseURL)
 	//if err != nil {
 	//	log.Error("failed to init storage", sl.Err(err))
-	//	os.Exit(1)
 	//}
 
 	router := chi.NewRouter()
 
 	router.Use(middleware.RequestID)
+	router.Use(corsMw.CORS)
 	router.Use(mw.New(log))
 	router.Use(middleware.RealIP)
 	router.Use(middleware.Recoverer)
