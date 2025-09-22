@@ -24,21 +24,20 @@ type HTTPServer struct {
 }
 
 func MustLoad() *Config {
-	defaultConfigPath := "C:/Users/samat/GolandProjects/url-shortener/short-url-b/config/local.yaml"
-	if err := os.Setenv("CONFIG_PATH", defaultConfigPath); err != nil {
-		log.Fatal(err)
-		return nil
-	}
+    // Prefer CONFIG_PATH from environment; fallback to a relative prod config
+    configPath, ok := os.LookupEnv("CONFIG_PATH")
+    if !ok || configPath == "" {
+        configPath = "./short-url-b/config/prod.yaml"
+    }
 
-	if _, err := os.Stat(defaultConfigPath); os.IsNotExist(err) {
-		log.Fatal("CONFIG_PATH does not exist")
-	}
+    if _, err := os.Stat(configPath); os.IsNotExist(err) {
+        log.Fatalf("config file not found: %s", configPath)
+    }
 
-	var cfg Config
+    var cfg Config
 
-	err := cleanenv.ReadConfig(defaultConfigPath, &cfg)
-	if err != nil {
-		log.Fatal(err)
-	}
-	return &cfg
+    if err := cleanenv.ReadConfig(configPath, &cfg); err != nil {
+        log.Fatal(err)
+    }
+    return &cfg
 }

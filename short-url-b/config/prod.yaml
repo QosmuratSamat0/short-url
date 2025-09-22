@@ -1,11 +1,10 @@
-env: "local"
+env: "prod"
 storage_path: "./storage/storage.db"
 
 database_url: "postgres://postgres:ayatuly@localhost:5432/postgres"
 
 http-server:
-  address: "localhost:8020"
+  address: "0.0.0.0:8010"
   timeout: 4s
   idle_timeout: 60s
-  user: "myuser"
-  password: "mypass"
+  user: "samat"

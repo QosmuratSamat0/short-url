@@ -1,7 +1,7 @@
 import axios, { AxiosResponse } from 'axios';
-import { UrlRequest, UrlResponse, AuthCredentials, ApiError } from '../types/api';
+import { UrlRequest, UrlResponse, AuthCredentials } from '../types/api';
 
-const API_BASE_URL = 'http://localhost:8010';
+const API_BASE_URL = process.env.REACT_APP_API_BASE_URL || '';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -22,10 +22,16 @@ export const createShortUrl = async (
     });
     return response.data;
   } catch (error: any) {
-    if (error.response?.data) {
-      throw error.response.data as ApiError;
+    if (error?.response?.data?.error) {
+      const apiError = new Error(error.response.data.error);
+      (apiError as any).status = error.response.data.status || 'ERROR';
+      (apiError as any).isApiError = true;
+      throw apiError;
     }
-    throw { status: 'ERROR', error: 'Network error' } as ApiError;
+    const networkError = new Error('Network error');
+    (networkError as any).status = 'ERROR';
+    (networkError as any).isApiError = true;
+    throw networkError;
   }
 };
 
@@ -43,10 +49,16 @@ export const deleteUrl = async (
     });
     return response.data;
   } catch (error: any) {
-    if (error.response?.data) {
-      throw error.response.data as ApiError;
+    if (error?.response?.data?.error) {
+      const apiError = new Error(error.response.data.error);
+      (apiError as any).status = error.response.data.status || 'ERROR';
+      (apiError as any).isApiError = true;
+      throw apiError;
     }
-    throw { status: 'ERROR', error: 'Network error' } as ApiError;
+    const networkError = new Error('Network error');
+    (networkError as any).status = 'ERROR';
+    (networkError as any).isApiError = true;
+    throw networkError;
   }
 };
 

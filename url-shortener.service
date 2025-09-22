@@ -1,15 +1,15 @@
 [Unit]
-Description=URL Shortener Backend
+Description=Url Shortener
 After=network.target
 
 [Service]
-Type=simple
-User=www-data
-WorkingDirectory=/path/to/your/backend
-ExecStart=/path/to/your/backend/url-shortener
+User=mathalama_kz
+WorkingDirectory=/home/mathalama_kz/apps/url-shortener
+ExecStart=/home/mathalama_kz/apps/url-shortener/url-shortener
 Restart=always
-RestartSec=5
-Environment=ENV=prod
+RestartSec=4
+StandardOutput=inherit
+EnvironmentFile=/home/mathalama_kz/apps/url-shortener/config.env
 
 [Install]
 WantedBy=multi-user.target

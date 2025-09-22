@@ -9,6 +9,13 @@ on:
 jobs:
   deploy-backend:
     runs-on: ubuntu-latest
+
+    env:
+      HOST: mathalama_kz@185.98.5.148
+      DEPLOY_DIRECTORY: /home/mathalama_kz/apps/url-shortener
+      CONFIG_PATH: /home/mathalama_kz/apps/url-shortener/config/prod.yaml
+      ENV_FILE_PATH: /home/mathalama_kz/url-shortener/config.env
+
     steps:
     - name: Checkout code
       uses: actions/checkout@v4
@@ -22,20 +29,38 @@ jobs:
       run: |
         cd short-url-b
         go mod download
-        go build -o url-shortener cmd/main.go
-    
-    - name: Deploy to server
-      uses: appleboy/ssh-action@v1.0.3
-      with:
-        host: ${{ secrets.HOST }}
-        username: ${{ secrets.USERNAME }}
-        key: ${{ secrets.SSH_KEY }}
-        script: |
-          cd /path/to/your/backend
-          git pull origin main
-          go build -o url-shortener cmd/main.go
-          sudo systemctl restart url-shortener
-          sudo systemctl status url-shortener
+        go build -o url-shortener ./cmd/main.go
+
+    - name: Deploy to VM
+      run: |
+        sudo apt-get install -y ssh rsync
+        echo "$DEPLOY_SSH_KEY" > deploy_key.pem
+        chmod 600 deploy_key.pem
+        ssh -i deploy_key.pem -o StrictHostKeyChecking=no ${{ env.HOST }} "mkdir -p ${{ env.DEPLOY_DIRECTORY }}"
+        rsync -avz -e 'ssh -i deploy_key.pem -o StrictHostKeyChecking=no' --exclude='.git' ./ ${{ env.HOST }}:${{ env.DEPLOY_DIRECTORY }}
+      env:
+        DEPLOY_SSH_KEY: ${{ secrets.DEPLOY_SSH_KEY }}
+    - name: Remove old systemd service file
+      run: |
+        ssh -i deploy_key.pem -o StrictHostKeyChecking=no ${{ env.HOST }} "rm -f /etc/systemd/system/url-shortener.service"
+    - name: List workspace contents
+      run: |
+        echo "Listing deployment folder contents:"
+        ls -la ${{ github.workspace }}/deployment
+    - name: Create environment file on server
+      run: |
+        ssh -i deploy_key.pem -o StrictHostKeyChecking=no ${{ env.HOST }} "\
+        touch ${{ env.ENV_FILE_PATH }} && \
+        chmod 600 ${{ env.ENV_FILE_PATH }} && \
+        echo 'CONFIG_PATH=${{ env.CONFIG_PATH }}' > ${{ env.ENV_FILE_PATH }} && \
+        echo 'HTTP_SERVER_PASSWORD=${{ secrets.AUTH_PASS }}' >> ${{ env.ENV_FILE_PATH }}"
+    - name: Copy systemd service file
+      run: |
+        scp -i deploy_key.pem -o StrictHostKeyChecking=no ${{ github.workspace }}/deployment/url-shortener.service ${{ env.HOST }}:/tmp/url-shortener.service
+        ssh -i deploy_key.pem -o StrictHostKeyChecking=no ${{ env.HOST }} "mv /tmp/url-shortener.service /etc/systemd/system/url-shortener.service"
+    - name: Start application
+      run: |
+        ssh -i deploy_key.pem -o StrictHostKeyChecking=no ${{ env.HOST }} "systemctl daemon-reload && systemctl restart url-shortener.service"
 
   deploy-frontend:
     runs-on: ubuntu-latest
